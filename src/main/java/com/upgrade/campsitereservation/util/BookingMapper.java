@@ -28,4 +28,12 @@ public class BookingMapper {
         booking.setUpdatedAt(LocalDateTime.now());
         return booking;
     }
+
+    public static Booking updateBookingRequestToBooking(Booking booking, BookingRequest.UpdateBookingRequest updateBookingRequest) {
+
+        booking.setArrivalDate(updateBookingRequest.getArrivalDate());
+        booking.setDepartureDate(updateBookingRequest.getDepartureDate());
+        booking.setUpdatedAt(LocalDateTime.now());
+        return booking;
+    }
 }

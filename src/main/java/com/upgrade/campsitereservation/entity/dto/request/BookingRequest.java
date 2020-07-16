@@ -66,29 +66,38 @@ public class BookingRequest {
         }
     }
 
-    @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class UpdateBookingRequest {
 
         @NotNull
-        private LocalDateTime arrivalDate;
+        private Integer bookingId;
         @NotNull
-        private LocalDateTime departureDate;
+        private LocalDate arrivalDate;
+        @NotNull
+        private LocalDate departureDate;
 
-        public LocalDateTime getArrivalDate() {
+        public LocalDate getArrivalDate() {
             return arrivalDate;
         }
 
-        public void setArrivalDate(LocalDateTime arrivalDate) {
+        public void setArrivalDate(LocalDate arrivalDate) {
             this.arrivalDate = arrivalDate;
         }
 
-        public LocalDateTime getDepartureDate() {
+        public LocalDate getDepartureDate() {
             return departureDate;
         }
 
-        public void setDepartureDate(LocalDateTime departureDate) {
+        public void setDepartureDate(LocalDate departureDate) {
             this.departureDate = departureDate;
+        }
+
+        public Integer getBookingId() {
+            return bookingId;
+        }
+
+        public void setBookingId(Integer bookingId) {
+            this.bookingId = bookingId;
         }
     }
 }

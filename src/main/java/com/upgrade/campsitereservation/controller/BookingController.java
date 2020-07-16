@@ -26,13 +26,13 @@ public class BookingController {
         return bookingService.getBookingById(bookingId);
     }
 
-    @PostMapping(value = "/campsite-booking")
+    @PostMapping(value = "/book-campsite")
     @ResponseStatus(value = HttpStatus.CREATED)
     public BookingResponse createBooking(@RequestBody @Valid BookingRequest.CreateBookingRequest createBookingRequest) {
         return bookingService.bookCampsite(createBookingRequest);
     }
 
-    @GetMapping("/availability")
+    @GetMapping("/check-availability")
     @ResponseStatus(value = HttpStatus.OK)
     public DateAvailabilityResponse findAvailableDates(@Valid @RequestParam(value = "startDate", required = false) LocalDate startDate,
                                                        @Valid @RequestParam(value = "endDate", required = false) LocalDate endDate) {
@@ -41,8 +41,13 @@ public class BookingController {
 
     @DeleteMapping(value = "/{bookingId}")
     @ResponseStatus(value = HttpStatus.OK)
-    public BookingResponse deleteBooking(@PathVariable(value = "bookingId") Integer bookingId) {
-        return bookingService.deleteBookingById(bookingId);
+    public void deleteBooking(@PathVariable(value = "bookingId") Integer bookingId) {
+        bookingService.deleteBookingById(bookingId);
     }
 
+    @PostMapping(value = "/update-booking")
+    @ResponseStatus(value = HttpStatus.CREATED)
+    public BookingResponse updateBooking(@RequestBody @Valid BookingRequest.UpdateBookingRequest updateBookingRequest) {
+        return bookingService.updateBookingById(updateBookingRequest);
+    }
 }
