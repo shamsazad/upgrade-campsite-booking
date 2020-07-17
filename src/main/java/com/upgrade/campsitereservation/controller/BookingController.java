@@ -5,6 +5,7 @@ import com.upgrade.campsitereservation.entity.dto.response.BookingResponse;
 import com.upgrade.campsitereservation.entity.dto.response.DateAvailabilityResponse;
 import com.upgrade.campsitereservation.service.BookingService;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;

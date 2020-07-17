@@ -10,6 +10,12 @@ public class ErrorResponseFactory {
     private static final String INTERNAL_SERVER_ERROR = "internal.server.error";
     private static final String BAD_REQUEST = "bad.request.error";
 
+    //messages
+    private static String MAXIMUM_NUMBER_BOOKING_DAYS_ALLOWED_MSG = "The maximum number of booking days allowed per request is 3.";
+    private static String MISSING_ENTITY_MSG = "Unable to find the Booking, please review your bookingId";
+    private static String ALREADY_BOOKED_MSG = "The campsite is already booked for the given date.";
+
+
     public static ErrorResponse buildBadRequestAlreadyBookedException(String message) {
 
         return ErrorResponse.builder()
@@ -17,6 +23,7 @@ public class ErrorResponseFactory {
                 .code(ALREADY_BOOKED)
                 .type(HttpStatus.BAD_REQUEST.name())
                 .message(message)
+                .detailMessage(ALREADY_BOOKED_MSG)
                 .build();
     }
 
@@ -27,6 +34,7 @@ public class ErrorResponseFactory {
                 .code(BOOKING_DAYS_LIMIT)
                 .type(HttpStatus.BAD_REQUEST.name())
                 .message(message)
+                .detailMessage(MAXIMUM_NUMBER_BOOKING_DAYS_ALLOWED_MSG)
                 .build();
     }
 
@@ -36,6 +44,7 @@ public class ErrorResponseFactory {
                 .status(HttpStatus.BAD_REQUEST)
                 .code(ENTITY_MISSING)
                 .type(HttpStatus.BAD_REQUEST.name())
+                .detailMessage(MISSING_ENTITY_MSG)
                 .message(message)
                 .build();
     }

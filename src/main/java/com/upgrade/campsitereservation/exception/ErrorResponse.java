@@ -20,11 +20,14 @@ public class ErrorResponse implements Serializable {
 
     private String code;
 
+    private String detailMessage;
+
     public ErrorResponse(ErrorResponseBuilder errorResponseBuilder) {
         this.code = errorResponseBuilder.code;
         this.message = errorResponseBuilder.message;
         this.status = errorResponseBuilder.status;
         this.type = errorResponseBuilder.type;
+        this.detailMessage = errorResponseBuilder.detailMessage;
     }
 
     public Integer getStatus() {
@@ -59,6 +62,14 @@ public class ErrorResponse implements Serializable {
         this.code = code;
     }
 
+    public String getDetailMessage() {
+        return detailMessage;
+    }
+
+    public void setDetailMessage(String detailMessage) {
+        this.detailMessage = detailMessage;
+    }
+
     public static ErrorResponseBuilder builder() {
         return new ErrorResponseBuilder();
     }
@@ -89,6 +100,7 @@ public class ErrorResponse implements Serializable {
         private String type;
         private String message;
         private String code;
+        private String detailMessage;
 
         public Integer getStatus() {
             return status;
@@ -122,6 +134,14 @@ public class ErrorResponse implements Serializable {
             this.code = code;
         }
 
+        public String getDetailMessage() {
+            return detailMessage;
+        }
+
+        public void setDetailMessage(String detailMessage) {
+            this.detailMessage = detailMessage;
+        }
+
         public ErrorResponseBuilder status(Integer status) {
             this.status = status;
             return this;
@@ -144,6 +164,11 @@ public class ErrorResponse implements Serializable {
 
         public ErrorResponseBuilder code(String code) {
             this.code = code;
+            return this;
+        }
+
+        public ErrorResponseBuilder detailMessage(String detailMessage) {
+            this.detailMessage = detailMessage;
             return this;
         }
 

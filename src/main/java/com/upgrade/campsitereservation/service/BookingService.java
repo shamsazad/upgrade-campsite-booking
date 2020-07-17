@@ -14,6 +14,7 @@ import com.upgrade.campsitereservation.util.DateAvailabilityMapper;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import javax.ws.rs.BadRequestException;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -23,8 +24,8 @@ import static java.time.temporal.ChronoUnit.DAYS;
 @Service
 public class BookingService {
 
-    private IBookingDao bookingDao;
-    private ICampsiteBookedDateDao campsiteBookedDateDao;
+    private final IBookingDao bookingDao;
+    private final ICampsiteBookedDateDao campsiteBookedDateDao;
 
     public BookingService(IBookingDao bookingDao, ICampsiteBookedDateDao campsiteBookedDateDao) {
         this.bookingDao = bookingDao;
@@ -33,7 +34,7 @@ public class BookingService {
 
     public BookingResponse getBookingById(Integer id) {
         Optional<Booking> optionalBooking = bookingDao.findById(id);
-        return BookingMapper.bookingToBookingResponse(optionalBooking.get());
+        return BookingMapper.bookingToBookingResponse(optionalBooking.orElseThrow(NoSuchElementException::new));
     }
 
     @Transactional
@@ -41,8 +42,12 @@ public class BookingService {
 
         Booking booking;
 
+        if(DAYS.between(createBookingRequest.getDepartureDate(), createBookingRequest.getArrivalDate()) >= 0) {
+            throw new BadRequestException("Departure date needs to be after arrival date.");
+        }
+
         if (DAYS.between(createBookingRequest.getArrivalDate(), createBookingRequest.getDepartureDate()) > 3) {
-            throw new MaximumBookingDayLimitExceedException("Exceeded number of days");
+            throw new MaximumBookingDayLimitExceedException("Booking Date issue");
         }
 
         List<CampsiteBookedDate> campsiteBookedDates = campsiteBookedDateDao.findAll();
@@ -55,7 +60,7 @@ public class BookingService {
             List<CampsiteBookedDate> createdCampsiteBookedDates = createCampsiteBookedDate(createBookingRequest, bookedDetails);
             campsiteBookedDateDao.saveAll(createdCampsiteBookedDates);
         } else {
-            throw new AlreadyBookedException("Already Booked");
+            throw new AlreadyBookedException("Booking Date issue");
         }
         return BookingMapper.bookingToBookingResponse(booking);
     }
@@ -69,13 +74,17 @@ public class BookingService {
     @Transactional
     public BookingResponse updateBookingById(BookingRequest.UpdateBookingRequest updateBookingRequest) {
 
+        if(DAYS.between(updateBookingRequest.getDepartureDate(), updateBookingRequest.getArrivalDate()) >= 0) {
+            throw new BadRequestException("Departure date needs to be after arrival date.");
+        }
+
         if (DAYS.between(updateBookingRequest.getArrivalDate(), updateBookingRequest.getDepartureDate()) > 3) {
-            throw new MaximumBookingDayLimitExceedException("Exceeded number of days");
+            throw new MaximumBookingDayLimitExceedException("Booking Date issue");
         }
 
         Booking updatedBooking;
         Optional<Booking> optionalBooking = bookingDao.findById(updateBookingRequest.getBookingId());
-        Booking booking = optionalBooking.get();
+        Booking booking = optionalBooking.orElseThrow(NoSuchElementException::new);
 
         List<CampsiteBookedDate> allBookedDates = campsiteBookedDateDao.findAll();
         List<CampsiteBookedDate> currentBookedDates = campsiteBookedDateDao.getByBookingId(booking.getId());
@@ -89,9 +98,36 @@ public class BookingService {
             List<CampsiteBookedDate> updatedCampsiteBookedDates = updateCampsiteBookedDate(currentBookedDates, updateBookingRequest);
             campsiteBookedDateDao.saveAll(updatedCampsiteBookedDates);
         } else {
-            throw new AlreadyBookedException("Already Booked");
+            throw new AlreadyBookedException("Booking Date issue");
         }
         return BookingMapper.bookingToBookingResponse(updatedBooking);
+    }
+
+    public DateAvailabilityResponse findAvailability(LocalDate startDate, LocalDate endDate) {
+
+        if(startDate == null) {
+            startDate =LocalDate.now();
+        }
+        if(endDate == null) {
+            endDate = startDate.plusMonths(1);
+        }
+
+        if(DAYS.between(endDate, startDate) >= 0) {
+            throw new BadRequestException("End date need to be after start date.");
+        }
+
+        List<CampsiteBookedDate> campsiteBookedDates = campsiteBookedDateDao.findAll();
+        HashSet<LocalDate> bookedDates = (HashSet<LocalDate>) campsiteBookedDates.stream()
+                .map(CampsiteBookedDate::getBookedDate).collect(Collectors.toSet());
+        Set<LocalDate> availableDates = new HashSet<>();
+        endDate = endDate.plusDays(1);
+        while(startDate.isBefore(endDate)) {
+            if (!bookedDates.contains(startDate)) {
+                availableDates.add(startDate);
+            }
+            startDate = startDate.plusDays(1);
+        }
+        return DateAvailabilityMapper.createDateAvailabilityResponse(availableDates);
     }
 
     private List<CampsiteBookedDate> updateCampsiteBookedDate(List<CampsiteBookedDate> campsiteBookedDates,
@@ -107,29 +143,6 @@ public class BookingService {
             }
         }
         return campsiteBookedDates;
-    }
-
-    public DateAvailabilityResponse findAvailability(LocalDate startDate, LocalDate endDate) {
-
-        if(startDate == null) {
-            startDate =LocalDate.now();
-        }
-        if(endDate == null) {
-            endDate = startDate.plusMonths(1);
-        }
-
-        List<CampsiteBookedDate> campsiteBookedDates = campsiteBookedDateDao.findAll();
-        HashSet<LocalDate> bookedDates = (HashSet<LocalDate>) campsiteBookedDates.stream()
-                .map(CampsiteBookedDate::getBookedDate).collect(Collectors.toSet());
-        Set<LocalDate> availableDates = new HashSet<>();
-        endDate = endDate.plusDays(1);
-        while(startDate.isBefore(endDate)) {
-            if (!bookedDates.contains(startDate)) {
-                availableDates.add(startDate);
-            }
-            startDate = startDate.plusDays(1);
-        }
-        return DateAvailabilityMapper.createDateAvailabilityResponse(availableDates);
     }
 
     private List<CampsiteBookedDate> createCampsiteBookedDate(BookingRequest.CreateBookingRequest createBookingRequest,

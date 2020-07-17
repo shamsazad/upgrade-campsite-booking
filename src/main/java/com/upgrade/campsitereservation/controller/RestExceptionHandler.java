@@ -8,8 +8,12 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
@@ -20,14 +24,10 @@ import java.util.NoSuchElementException;
 @ControllerAdvice
 public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
-    private static String MAXIMUM_NUMBER_BOOKING_DAYS_ALLOWED = "The maximum number of booking days allowed per request is 3.";
-    private static String MISSING_ENTITY = "Unable to find the Booking, please review your bookingId";
-    private static String ALREADY_BOOKED = "The campsite is already booked for the given date.";
-
     @ExceptionHandler(MaximumBookingDayLimitExceedException.class)
     public ResponseEntity<ErrorResponse> exceptionHandler(MaximumBookingDayLimitExceedException maximumBookingDayLimitExceedException) {
         ErrorResponse errorResponse = ErrorResponseFactory
-                .buildBadRequestExceededMaximumBookingDaysAllowed(MAXIMUM_NUMBER_BOOKING_DAYS_ALLOWED);
+                .buildBadRequestExceededMaximumBookingDaysAllowed(maximumBookingDayLimitExceedException.getMessage());
 
         return buildBadRequestErrorResponseEntity(errorResponse);
     }
@@ -35,7 +35,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(AlreadyBookedException.class)
     public ResponseEntity<ErrorResponse> exceptionHandler(AlreadyBookedException alreadyBookedException) {
         ErrorResponse errorResponse = ErrorResponseFactory
-                .buildBadRequestAlreadyBookedException(ALREADY_BOOKED);
+                .buildBadRequestAlreadyBookedException(alreadyBookedException.getMessage());
 
         return buildBadRequestErrorResponseEntity(errorResponse);
     }
@@ -44,7 +44,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<ErrorResponse> exceptionHandler(NoSuchElementException e) {
 
         ErrorResponse errorResponse = ErrorResponseFactory
-                .buildEntityNotFoundException(MISSING_ENTITY);
+                .buildEntityNotFoundException(e.getMessage());
 
         return buildBadRequestErrorResponseEntity(errorResponse);
     }
@@ -53,14 +53,6 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<ErrorResponse> exceptionHandler(ConstraintViolationException constraintViolationException) {
         ErrorResponse errorResponse = ErrorResponseFactory
                 .buildForgienKeyConstraintException(constraintViolationException.getMessage());
-
-        return buildBadRequestErrorResponseEntity(errorResponse);
-    }
-
-    @ExceptionHandler(HttpServerErrorException.InternalServerError.class)
-    public ResponseEntity<ErrorResponse> exceptionHandler(HttpServerErrorException.InternalServerError internalServerError) {
-        ErrorResponse errorResponse = ErrorResponseFactory
-                .buildInternalServerError(internalServerError.getMessage());
 
         return buildBadRequestErrorResponseEntity(errorResponse);
     }
@@ -74,7 +66,15 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         return buildBadRequestErrorResponseEntity(errorResponse);
     }
 
-    @ExceptionHandler(Exception.class)
+    @ExceptionHandler(HttpServerErrorException.InternalServerError.class)
+    public ResponseEntity<ErrorResponse> exceptionHandler(HttpServerErrorException.InternalServerError internalServerError) {
+        ErrorResponse errorResponse = ErrorResponseFactory
+                .buildInternalServerError(internalServerError.getMessage());
+
+        return buildBadRequestErrorResponseEntity(errorResponse);
+    }
+
+    @ExceptionHandler( Exception.class)
     public ResponseEntity<ErrorResponse> exceptionHandler(Exception e) {
 
         ErrorResponse errorResponse = ErrorResponseFactory
