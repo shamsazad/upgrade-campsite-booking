@@ -17,7 +17,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import javax.ws.rs.BadRequestException;
 import java.time.LocalDate;
-import java.util.Optional;
 
 import static com.upgrade.campsitereservation.util.TestHelper.*;
 import static org.junit.jupiter.api.Assertions.*;

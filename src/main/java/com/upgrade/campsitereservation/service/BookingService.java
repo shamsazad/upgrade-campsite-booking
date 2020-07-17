@@ -42,19 +42,16 @@ public class BookingService {
 
         dateVerifier(createBookingRequest.getArrivalDate(), createBookingRequest.getDepartureDate());
 
-        Booking booking;
         List<CampsiteBookedDate> campsiteBookedDates = campsiteBookedDateDao.findAll();
 
-        if (checkAvailability(createBookingRequest.getArrivalDate(), createBookingRequest.getDepartureDate(),
-                campsiteBookedDates)) {
+        checkAvailability(createBookingRequest.getArrivalDate(), createBookingRequest.getDepartureDate(),
+                campsiteBookedDates);
 
-            booking = BookingMapper.createBookingRequestToBooking(createBookingRequest);
-            Booking bookedDetails = bookingDao.save(booking);
-            List<CampsiteBookedDate> createdCampsiteBookedDates = createCampsiteBookedDate(createBookingRequest, bookedDetails);
-            campsiteBookedDateDao.saveAll(createdCampsiteBookedDates);
-        } else {
-            throw new AlreadyBookedException("Booking Date issue");
-        }
+        Booking booking = BookingMapper.createBookingRequestToBooking(createBookingRequest);
+        Booking bookedDetails = bookingDao.save(booking);
+        List<CampsiteBookedDate> createdCampsiteBookedDates = createCampsiteBookedDate(createBookingRequest, bookedDetails);
+        campsiteBookedDateDao.saveAll(createdCampsiteBookedDates);
+
         return BookingMapper.bookingToBookingResponse(booking);
     }
 
@@ -67,28 +64,25 @@ public class BookingService {
     @Transactional
     public BookingResponse updateBookingById(BookingRequest.UpdateBookingRequest updateBookingRequest) {
 
-            dateVerifier(updateBookingRequest.getArrivalDate(), updateBookingRequest.getDepartureDate());
+        dateVerifier(updateBookingRequest.getArrivalDate(), updateBookingRequest.getDepartureDate());
 
-            Booking updatedBooking;
-            Optional<Booking> optionalBooking = bookingDao.findById(updateBookingRequest.getBookingId());
-            Booking booking = optionalBooking.orElseThrow(NoSuchElementException::new);
+        Optional<Booking> optionalBooking = bookingDao.findById(updateBookingRequest.getBookingId());
+        Booking booking = optionalBooking.orElseThrow(NoSuchElementException::new);
 
-            List<CampsiteBookedDate> allBookedDates = campsiteBookedDateDao.findAll();
-            List<CampsiteBookedDate> currentBookedDates = campsiteBookedDateDao.getByBookingId(booking.getId());
-            allBookedDates.removeAll(currentBookedDates);
+        List<CampsiteBookedDate> allBookedDates = campsiteBookedDateDao.findAll();
+        List<CampsiteBookedDate> currentBookedDates = campsiteBookedDateDao.getByBookingId(booking.getId());
+        allBookedDates.removeAll(currentBookedDates);
 
-            if (checkAvailability(updateBookingRequest.getArrivalDate(),
-                    updateBookingRequest.getDepartureDate(), allBookedDates)) {
+        checkAvailability(updateBookingRequest.getArrivalDate(),
+                    updateBookingRequest.getDepartureDate(), allBookedDates);
 
-                updatedBooking = BookingMapper.updateBookingRequestToBooking(booking, updateBookingRequest);
-                bookingDao.save(updatedBooking);
-                List<CampsiteBookedDate> updatedCampsiteBookedDates = updateCampsiteBookedDate(currentBookedDates, updateBookingRequest);
-                campsiteBookedDateDao.saveAll(updatedCampsiteBookedDates);
-            } else {
-                throw new AlreadyBookedException("Booking Date issue");
-            }
+        Booking updatedBooking = BookingMapper.updateBookingRequestToBooking(booking, updateBookingRequest);
+        bookingDao.save(updatedBooking);
+        List<CampsiteBookedDate> updatedCampsiteBookedDates = updateCampsiteBookedDate(currentBookedDates, updateBookingRequest);
+        campsiteBookedDateDao.saveAll(updatedCampsiteBookedDates);
 
-            return BookingMapper.bookingToBookingResponse(updatedBooking);
+
+        return BookingMapper.bookingToBookingResponse(updatedBooking);
     }
 
     private void dateVerifier(LocalDate startDate, LocalDate endDate) {
@@ -173,17 +167,17 @@ public class BookingService {
         return campsiteBookedDates;
     }
 
-    private boolean checkAvailability(LocalDate arrivalDate, LocalDate departureDate,
+    private void checkAvailability(LocalDate arrivalDate, LocalDate departureDate,
                                       List<CampsiteBookedDate> campsiteBookedDates) {
 
         HashSet<LocalDate> bookedDates = (HashSet<LocalDate>) campsiteBookedDates.stream()
                 .map(CampsiteBookedDate::getBookedDate).collect(Collectors.toSet());
+
         while(arrivalDate.isBefore(departureDate)) {
             if(bookedDates.contains(arrivalDate)) {
-                return false;
+                throw new AlreadyBookedException("Booking Date issue");
             }
             arrivalDate = arrivalDate.plusDays(1);
         }
-        return true;
     }
 }
