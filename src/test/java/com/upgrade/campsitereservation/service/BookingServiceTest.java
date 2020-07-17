@@ -57,8 +57,8 @@ public class BookingServiceTest {
                 () -> {
                     Mockito.when(campsiteBookedDateDao.findAll()).thenReturn(createCampsiteBookingDates());
                     BookingRequest.CreateBookingRequest createBookingRequest = createBookingRequest();
-                    createBookingRequest.setArrivalDate(LocalDate.of(2020,7,18));
-                    createBookingRequest.setDepartureDate(LocalDate.of(2020,7,20));
+                    createBookingRequest.setArrivalDate(LocalDate.now().plusDays(1));
+                    createBookingRequest.setDepartureDate(LocalDate.now().plusDays(3));
                     bookingService.bookCampsite(createBookingRequest);
                 });
     }
@@ -69,8 +69,8 @@ public class BookingServiceTest {
         assertThrows(MaximumBookingDayLimitExceedException.class,
                 () -> {
                     BookingRequest.CreateBookingRequest createBookingRequest = createBookingRequest();
-                    createBookingRequest.setArrivalDate(LocalDate.of(2020,7,15));
-                    createBookingRequest.setDepartureDate(LocalDate.of(2020,7,20));
+                    createBookingRequest.setArrivalDate(LocalDate.now().plusDays(4));
+                    createBookingRequest.setDepartureDate(LocalDate.now().plusDays(10));
                     bookingService.bookCampsite(createBookingRequest);
                 });
     }
@@ -81,8 +81,8 @@ public class BookingServiceTest {
         BadRequestException badRequestException = assertThrows(BadRequestException.class,
                 () -> {
                     BookingRequest.CreateBookingRequest createBookingRequest = createBookingRequest();
-                    createBookingRequest.setArrivalDate(LocalDate.of(2020,7,20));
-                    createBookingRequest.setDepartureDate(LocalDate.of(2020,7,18));
+                    createBookingRequest.setArrivalDate(LocalDate.now().plusDays(4));
+                    createBookingRequest.setDepartureDate(LocalDate.now().plusDays(1));
                     bookingService.bookCampsite(createBookingRequest);
                 });
         assertEquals(badRequestException.getMessage(),"Departure date needs to be after arrival date.");
@@ -112,8 +112,8 @@ public class BookingServiceTest {
                 AlreadyBookedException.class,
                 () -> {
                     BookingRequest.UpdateBookingRequest updateBookingRequest = createUpdateRequest();
-                    updateBookingRequest.setArrivalDate(LocalDate.of(2020,7,20));
-                    updateBookingRequest.setDepartureDate(LocalDate.of(2020,7,22));
+                    updateBookingRequest.setArrivalDate(LocalDate.now().plusDays(3));
+                    updateBookingRequest.setDepartureDate(LocalDate.now().plusDays(5));
                     bookingService.updateBookingById(updateBookingRequest);
                 }
         );
@@ -122,14 +122,14 @@ public class BookingServiceTest {
 
     @Test
     public void findAvailableDates() {
-        LocalDate startDate = LocalDate.of(2020,7,20);
-        LocalDate endDate = LocalDate.of(2020,7,27);
+        LocalDate startDate = LocalDate.now().plusDays(3);
+        LocalDate endDate = LocalDate.now().plusDays(10);
 
         Mockito.when(campsiteBookedDateDao.findAll()).thenReturn(createCampsiteBookingDates());
         DateAvailabilityResponse dateAvailabilityResponse = bookingService.findAvailability(startDate, endDate);
 
         assertEquals(dateAvailabilityResponse.getAvailableDates().size(), 6);
-        assertTrue(dateAvailabilityResponse.getAvailableDates().contains(LocalDate.of(2020,7,27)));
+        assertTrue(dateAvailabilityResponse.getAvailableDates().contains(LocalDate.now().plusDays(10)));
     }
 
     @Test
